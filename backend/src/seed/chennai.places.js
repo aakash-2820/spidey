@@ -26,4 +26,8 @@ export const places=[
  p('snow','VGP Snow Kingdom','entertainment',12.9142,80.2504,['friends','indoor'],750,4.4,120,'indoor','low'),
  p('vivekananda','Vivekananda House','heritage',13.0499,80.2803,['culture','photography'],100,4.4,60,'indoor','low'),
  p('lighthouse','Chennai Lighthouse','viewpoint',13.0395,80.2795,['photography','beach'],20,4.4,45,'indoor','medium'),
+ p('anna-tower','Anna Nagar Tower Park','park',13.0850,80.2101,['nature','photography','friends'],0,4.4,75),
+ p('marine-kingdom','VGP Marine Kingdom','indoor attraction',12.9121,80.2505,['friends','photography','indoor'],850,4.5,150,'indoor','low'),
+ p('adyar-ananda','A2B Adyar','restaurant',13.0068,80.2564,['food','family'],350,4.3,60,'indoor','low'),
+ p('kalakshetra','Kalakshetra Foundation','culture',12.9972,80.2666,['culture','architecture','photography'],100,4.6,90,'indoor','low'),
 ];

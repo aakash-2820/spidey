@@ -1,0 +1,1 @@
+import { Router } from 'express';import { searchPlaces } from '../services/geocoding.service.js';const router=Router();router.get('/search',async(req,res,next)=>{try{if(!req.query.q)return res.status(400).json({message:'q is required'});res.json(await searchPlaces(String(req.query.q),String(req.query.city||'Chennai')))}catch(e){next(e)}});export default router;

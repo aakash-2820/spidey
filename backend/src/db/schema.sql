@@ -9,3 +9,6 @@ CREATE TABLE user_preferences(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user
 CREATE TABLE recommendation_logs(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),trip_id uuid REFERENCES trips(id),place_id text REFERENCES places(id),scores jsonb,final_score numeric,reasons jsonb,created_at timestamptz DEFAULT now());
 CREATE TABLE entities(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),entity_type text NOT NULL,name text NOT NULL UNIQUE,created_at timestamptz DEFAULT now());
 CREATE TABLE relationships(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),source_entity_id uuid REFERENCES entities(id),relationship_type text NOT NULL,target_entity_id uuid REFERENCES entities(id),weight numeric DEFAULT 1,created_at timestamptz DEFAULT now());
+CREATE TABLE custom_places(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id uuid REFERENCES users(id),trip_id uuid REFERENCES trips(id) ON DELETE CASCADE,name text NOT NULL,display_name text,latitude numeric NOT NULL,longitude numeric NOT NULL,estimated_cost integer DEFAULT 0,visit_duration_minutes integer DEFAULT 60,user_priority text DEFAULT 'USER_MUST_VISIT',source text CHECK(source IN ('NOMINATIM','USER','DEMO')),created_at timestamptz DEFAULT now());
+ALTER TABLE trip_items ADD COLUMN priority_type text DEFAULT 'AI_RECOMMENDED';
+ALTER TABLE trip_items ADD COLUMN priority_score integer DEFAULT 50;

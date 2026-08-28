@@ -4,6 +4,8 @@
 
 TravelMind is an AI-powered adaptive travel planner built around one product loop: **PLAN → OPTIMIZE → ADAPT → EXPLAIN**. It creates a personalized route, watches for real-world disruption, and repairs only the affected part of the remaining day.
 
+The current MVP uses a premium light interface and supports real editing throughout the planning journey. Destination, traveller count, budget, times, interests, exclusions, selected stops, visit duration, and manually added priority places all update the trip model. Browser persistence restores the latest demo state after refresh, while the REST API exposes durable PostgreSQL-ready trip and item actions.
+
 ## Why TravelMind is different
 
 Traditional itinerary planners primarily focus on generating the initial travel plan. TravelMind focuses on both itinerary generation and itinerary recovery. When real-world conditions change, TravelMind preserves completed and high-value activities while re-optimizing only the affected portion of the remaining journey.
@@ -36,6 +38,7 @@ Natural language → Gemini/NLP → structured requirements
 - **Data:** PostgreSQL schema for users, trips, items, events, revisions, places, preferences, logs, entities, and relationships
 - **AI:** Gemini structured extraction with deterministic fallback
 - **Optimization:** weighted recommendation scoring, budget/time/opening constraints, Haversine + nearest-neighbor route ordering
+- **Routing:** a dynamic nearest-K travel graph plus a tested Dijkstra shortest-path implementation; iterative ordering compares shortest-path cost, opening feasibility, recommendation value, and user priority without claiming Dijkstra solves TSP
 - **Recovery:** completed-item freezing, preservation priority, invalid-item removal, alternative search, re-routing, change explanations
 
 ## Run locally
@@ -72,6 +75,10 @@ See `backend/.env.example`. Keep `GEMINI_API_KEY`, `OPENWEATHER_API_KEY`, `JWT_S
 - `POST /api/trips/parse-request`, `POST /api/trips/generate`
 - `GET /api/trips`, `GET /api/trips/:id`, `POST /api/trips/:id/start`
 - `POST /api/trips/:id/recover`
+- `POST /api/trips/:id/optimize`
+- `POST/PATCH/DELETE /api/trips/:id/items/...`
+- `GET /api/geocode/search?q=&city=`
+- `POST /api/ai/parse-trip`, `POST /api/ai/chat`
 - `GET /api/places`, `GET /api/places/recommendations`, `GET /api/places/:id`
 
 Recovery accepts `DELAY`, `WEATHER_CHANGE`, `BUDGET_CHANGE`, and `PLACE_UNAVAILABLE` events. The Chennai seed contains 26 varied places and deterministic scores.

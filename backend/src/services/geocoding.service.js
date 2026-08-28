@@ -1,0 +1,5 @@
+import { places } from '../seed/chennai.places.js';
+export async function searchPlaces(query,city='Chennai'){
+ const q=query.toLowerCase(),local=places.filter(p=>p.name.toLowerCase().includes(q)).slice(0,5).map(p=>({id:p.id,name:p.name,displayName:`${p.name}, ${city}, Tamil Nadu`,latitude:p.latitude,longitude:p.longitude,type:p.category,address:{city,state:'Tamil Nadu'},source:'DEMO'}));if(local.length||process.env.DEMO_MODE!=='false')return local;
+ const url=new URL('https://nominatim.openstreetmap.org/search');url.searchParams.set('q',`${query}, ${city}`);url.searchParams.set('format','jsonv2');url.searchParams.set('limit','5');url.searchParams.set('addressdetails','1');const r=await fetch(url,{headers:{'user-agent':'TravelMind-Hackathon/1.0'}});if(!r.ok)throw new Error('Geocoding provider unavailable');return(await r.json()).map(x=>({id:String(x.place_id),name:x.name||query,displayName:x.display_name,latitude:Number(x.lat),longitude:Number(x.lon),type:x.type,address:x.address,source:'NOMINATIM'}));
+}
