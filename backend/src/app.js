@@ -1,0 +1,12 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import tripRoutes from './routes/trip.routes.js';
+import placeRoutes from './routes/place.routes.js';
+import authRoutes from './routes/auth.routes.js';
+export const app=express();
+app.use(helmet(),cors({origin:process.env.FRONTEND_URL||'http://localhost:3000'}),express.json({limit:'100kb'}));
+app.get('/api/health',(_,res)=>res.json({ok:true,demoMode:process.env.DEMO_MODE!=='false'}));
+app.use('/api/trips',tripRoutes);app.use('/api/places',placeRoutes);
+app.use('/api/auth',authRoutes);
+app.use((err,_,res,next)=>{if(res.headersSent)return next(err);console.error(err);res.status(err.status||500).json({message:err.message||'TravelMind could not complete that request.'})});

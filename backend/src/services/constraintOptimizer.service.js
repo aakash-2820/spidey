@@ -1,0 +1,1 @@
+export function optimizeConstraints(candidates,req){let cost=0,minutes=0;const max=(req.durationDays||1)*660;return candidates.filter(p=>{const valid=cost+p.averageCost<=req.budget&&minutes+p.visitDurationMinutes<=max;if(valid){cost+=p.averageCost;minutes+=p.visitDurationMinutes+25}return valid}).slice(0,5)}
