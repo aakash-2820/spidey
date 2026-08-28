@@ -12,3 +12,12 @@ CREATE TABLE IF NOT EXISTS travelmind_trip_revisions(id uuid PRIMARY KEY DEFAULT
 CREATE TABLE IF NOT EXISTS travelmind_recommendation_logs(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),trip_id uuid REFERENCES travelmind_trips(id),place_id text REFERENCES travelmind_places(id),scores jsonb,final_score numeric,reasons jsonb,created_at timestamptz DEFAULT now());
 CREATE TABLE IF NOT EXISTS travelmind_knowledge_entities(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),entity_type text NOT NULL,name text NOT NULL UNIQUE,created_at timestamptz DEFAULT now());
 CREATE TABLE IF NOT EXISTS travelmind_knowledge_relationships(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),source_entity_id uuid REFERENCES travelmind_knowledge_entities(id),relationship_type text NOT NULL,target_entity_id uuid REFERENCES travelmind_knowledge_entities(id),weight numeric DEFAULT 1,created_at timestamptz DEFAULT now());
+ALTER TABLE travelmind_places ADD COLUMN IF NOT EXISTS google_place_id text;
+ALTER TABLE travelmind_places ADD COLUMN IF NOT EXISTS formatted_address text;
+ALTER TABLE travelmind_places ADD COLUMN IF NOT EXISTS google_types text[] DEFAULT '{}';
+ALTER TABLE travelmind_places ADD COLUMN IF NOT EXISTS user_rating_count integer;
+ALTER TABLE travelmind_places ADD COLUMN IF NOT EXISTS price_level text;
+ALTER TABLE travelmind_places ADD COLUMN IF NOT EXISTS google_maps_uri text;
+ALTER TABLE travelmind_places ADD COLUMN IF NOT EXISTS photo_reference text;
+ALTER TABLE travelmind_places ADD COLUMN IF NOT EXISTS last_updated_at timestamptz DEFAULT now();
+CREATE UNIQUE INDEX IF NOT EXISTS travelmind_places_google_place_id_idx ON travelmind_places(google_place_id) WHERE google_place_id IS NOT NULL;
