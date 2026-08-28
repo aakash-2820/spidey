@@ -1,0 +1,1 @@
+export function imageFor(place){return place.imageUrl?{imageUrl:place.imageUrl,source:place.imageSource,attribution:place.imageAttribution}:{imageUrl:null,source:'CATEGORY_PLACEHOLDER',attribution:null}}

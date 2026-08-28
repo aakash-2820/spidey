@@ -1,0 +1,1 @@
+import { Router } from 'express';import { directions } from '../services/routingProvider.service.js';const router=Router();router.post('/directions',async(req,res,next)=>{try{res.json(await directions(req.body.from,req.body.to))}catch(e){next(e)}});export default router;

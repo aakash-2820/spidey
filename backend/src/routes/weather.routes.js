@@ -1,0 +1,1 @@
+import { Router } from 'express';import { getWeather } from '../services/weather.service.js';const router=Router();router.get('/forecast',async(req,res,next)=>{try{res.json(await getWeather({latitude:Number(req.query.lat),longitude:Number(req.query.lon),tripDate:req.query.date}))}catch(e){next(e)}});export default router;

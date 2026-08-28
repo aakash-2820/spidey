@@ -1,0 +1,1 @@
+import 'dotenv/config';import { readFile } from 'node:fs/promises';import { pool } from '../config/database.js';if(!pool)throw new Error('DB_* configuration is incomplete');const sql=await readFile(new URL('./schema.sql',import.meta.url),'utf8');try{await pool.query(sql);console.log('TravelMind schema is ready');}finally{await pool.end()}

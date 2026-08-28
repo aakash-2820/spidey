@@ -1,0 +1,1 @@
+import { Router } from 'express';import { handleChat } from '../services/chat.service.js';const router=Router();router.post('/',async(req,res,next)=>{try{res.json(await handleChat(req.body.message,req.body.context||{}))}catch(e){next(e)}});export default router;
