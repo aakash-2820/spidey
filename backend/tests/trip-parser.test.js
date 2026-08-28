@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { parseTripRequest } from '../src/services/tripParser.service.js';
+const aliases={Trichy:'Tiruchirappalli'};
+const parse=text=>parseTripRequest(text,{geminiParser:async()=>({}),destinationResolver:async name=>({name:aliases[name]||name,state:'Tamil Nadu',country:'India'})});
+test('parses informal Chennai budget and duration without asking for destination',async()=>{const out=await parse('i have 2000 2 days plan for chennai');assert.equal(out.destination,'Chennai');assert.equal(out.budget,2000);assert.equal(out.durationDays,2);assert.equal(out.travellers,null);assert.deepEqual(out.interests,[]);assert.deepEqual(out.missingFields,['travellers','interests'])});
+test('parses bare city duration and budget',async()=>{const out=await parse('coimbatore 3 days 5000');assert.equal(out.destination,'Coimbatore');assert.equal(out.durationDays,3);assert.equal(out.budget,5000)});
+test('parses word duration, interest, and explicit budget',async()=>{const out=await parse('madurai two days temples budget 4000');assert.equal(out.destination,'Madurai');assert.equal(out.durationDays,2);assert.equal(out.budget,4000);assert.ok(out.interests.includes('Temple'))});
+test('normalizes a resolved destination alias',async()=>{const out=await parse('plan for trichy 1 day 1500');assert.equal(out.destination,'Tiruchirappalli');assert.equal(out.durationDays,1);assert.equal(out.budget,1500)});
+test('parses Kanyakumari interests and Salem missing fields',async()=>{const coast=await parse('kanyakumari 2 days beach photography');assert.equal(coast.destination,'Kanyakumari');assert.deepEqual(coast.interests,['Beach','Photography']);const salem=await parse('salem');assert.equal(salem.destination,'Salem');assert.deepEqual(salem.missingFields,['durationDays','budget','travellers','interests'])});

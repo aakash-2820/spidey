@@ -1,1 +1,10 @@
-export function detectCommand(text=''){const s=text.toLowerCase();if(/late|delay/.test(s))return{intent:'DELAY',data:{delayMinutes:/two|2\s*hour/.test(s)?120:60}};if(/rain|weather/.test(s))return{intent:'WEATHER_CHANGE',data:{weather:'HEAVY_RAIN'}};if(/budget|₹|cheaper/.test(s)){const amount=Number(s.match(/\d+/)?.[0]||1000);return{intent:'BUDGET_CHANGE',data:{remainingBudget:amount}}}if(/^remove /.test(s))return{intent:'REMOVE_PLACE',data:{placeName:text.replace(/^remove /i,'').replace(/\.$/,'')}};if(/^add /.test(s))return{intent:'ADD_PLACE',data:{query:text.replace(/^add /i,'')}};return{intent:'QUESTION',data:{text}}}
+export function detectCommand(text=''){
+  const s=text.toLowerCase();
+  if(/(?:make|create|generate|build|plan).*(?:plan|trip|itinerary)|(?:plan|itinerary).*(?:selected places|my places)/.test(s))return{intent:'MAKE_PLAN',data:{text}};
+  if(/late|delay/.test(s))return{intent:'DELAY',data:{delayMinutes:/two|2\s*hour/.test(s)?120:60}};
+  if(/rain|weather/.test(s))return{intent:'WEATHER_CHANGE',data:{weather:'HEAVY_RAIN'}};
+  if(/budget|₹|cheaper/.test(s)){const amount=Number(s.match(/\d+/)?.[0]||1000);return{intent:'BUDGET_CHANGE',data:{remainingBudget:amount}}}
+  if(/^remove /.test(s))return{intent:'REMOVE_PLACE',data:{placeName:text.replace(/^remove /i,'').replace(/\.$/,'')}};
+  if(/^add /.test(s))return{intent:'ADD_PLACE',data:{query:text.replace(/^add /i,'')}};
+  return{intent:'QUESTION',data:{text}};
+}
