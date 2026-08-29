@@ -698,6 +698,8 @@ function Clarify({ req, setReq, done, back }) {
       ? "budget"
       : !req.travelers
         ? "travelers"
+        : !req.interests.length
+          ? "interests"
         : null;
   useEffect(() => {
     if (!missing) done();
@@ -725,7 +727,7 @@ function Clarify({ req, setReq, done, back }) {
               ["₹8,000", 8000],
             ],
           }
-        : {
+        : missing === "travelers" ? {
             title: "How many people are travelling?",
             sub: "Group size helps estimate costs and choose suitable places.",
             options: [
@@ -735,8 +737,12 @@ function Clarify({ req, setReq, done, back }) {
               ["4 people", 4],
               ["5+ people", 5],
             ],
+          } : {
+            title: "What kind of places are you interested in?",
+            sub: `Choose what you would enjoy most in ${req.destination}.`,
+            options: [["Beach", "Beach"], ["Food", "Food"], ["Photography", "Photography"], ["Historical Places", "Historical Places"], ["Nature", "Nature"], ["Shopping", "Shopping"]],
           };
-  const choose = (n) => setReq({ ...req, [missing]: n });
+  const choose = (value) => setReq({ ...req, [missing]: missing === "interests" ? [value] : value });
   return (
     <main className="v2-flow">
       <div className="flow-nav">
@@ -770,7 +776,7 @@ function Clarify({ req, setReq, done, back }) {
           className="custom-answer"
           onClick={() => {
             const v = prompt("Enter a custom value");
-            if (v) choose(Number(v));
+            if (v) choose(missing === "interests" ? v.trim() : Number(v));
           }}
         >
           Enter a custom answer
@@ -786,7 +792,7 @@ function Clarify({ req, setReq, done, back }) {
     </main>
   );
 }
-function Understand({ req, setReq, next, back, notify }) {
+function Understand({ req, setReq, next, back, notify, retry }) {
   const [edit, setEdit] = useState(null);
   const [val, setVal] = useState("");
   const save = () => {
@@ -977,7 +983,7 @@ function Understand({ req, setReq, next, back, notify }) {
           </span>
         </aside>
         <button className="blue-btn continue" onClick={next}>
-          Show My Recommendations <ArrowRight />
+          {retry ? "Retry Google Places" : "Show My Recommendations"} <ArrowRight />
         </button>
       </section>
     </main>
@@ -1966,9 +1972,11 @@ export default function Page() {
   const [toast, setToast] = useState(""),
     [add, setAdd] = useState(false),
     [assistant, setAssistant] = useState(false),
-    [event, setEvent] = useState("");
+    [event, setEvent] = useState(""),
+    [discoveryFailed, setDiscoveryFailed] = useState(false);
   const tripId = useRef(null),
     saveTimer = useRef(null),
+    newTripStarted = useRef(false),
     apiBase =
       process.env.NEXT_PUBLIC_API_URL ||
       (typeof window !== "undefined" &&
@@ -1977,6 +1985,7 @@ export default function Page() {
         : "");
   useEffect(() => {
     const timer = setTimeout(async () => {
+      if (newTripStarted.current) return;
       let restored = false;
       if (apiBase)
         try {
@@ -1992,6 +2001,7 @@ export default function Page() {
               }).then((x) => x.json());
               const saved = detail.requirements?.travelmindState;
               if (saved?.req) {
+                if (newTripStarted.current) return;
                 tripId.current = detail.id;
                 setReqState(saved.req);
                 setPlacesState(saved.places || []);
@@ -2006,6 +2016,7 @@ export default function Page() {
         try {
           const saved = localStorage.getItem("travelmind-trip");
           if (saved) {
+            if (newTripStarted.current) return;
             const d = JSON.parse(saved);
             setReqState(d.req || DEFAULT_REQ);
             setPlacesState(d.places || scorePlaces(d.req || DEFAULT_REQ));
@@ -2056,8 +2067,9 @@ export default function Page() {
       } catch {}
     }, 350);
   };
-  const mapResults = (data) =>
-    data.places.map((p, i) => ({
+  const mapResults = (data) => {
+    const list = Array.isArray(data) ? data : Array.isArray(data?.places) ? data.places : [];
+    return list.filter((p) => Number.isFinite(p.latitude) && Number.isFinite(p.longitude)).map((p, i) => ({
       id: p.id,
       name: p.name,
       lat: p.latitude,
@@ -2080,6 +2092,7 @@ export default function Page() {
       googleMapsUri: p.googleMapsUri || null,
       distanceKm: p.distanceFromDestinationKm || null,
     }));
+  };
   const refreshRecommendations = async (r) => {
     if (!apiBase) return;
     try {
@@ -2097,12 +2110,16 @@ export default function Page() {
         }),
         signal: AbortSignal.timeout(30000),
       });
-      if (!response.ok) throw new Error();
-      const next = mapResults(await response.json());
+      const raw = await response.text();
+      let payload; try { payload = JSON.parse(raw); } catch { payload = null; }
+      if (!response.ok) throw new Error(payload?.message || raw.slice(0, 200) || `Google Places failed (${response.status})`);
+      const next = mapResults(payload);
+      if (!next.length) throw new Error("Google Places returned no usable recommendations.");
       setPlacesState(next);
       persist(r, next);
-    } catch {
-      setToast("We couldn't load fresh Google place results right now.");
+    } catch (error) {
+      console.error("Recommendation discovery failed:", error);
+      setToast(error?.message || "We couldn't load fresh Google place results right now.");
     }
   };
   const setReq = (r) => {
@@ -2113,7 +2130,7 @@ export default function Page() {
     setReqState(r);
     if (discoveryChanged) {
       setPlacesState([]);
-      void refreshRecommendations(r);
+      persist(r, []);
     } else persist(r, places);
   };
   const setPlaces = (p) => {
@@ -2129,6 +2146,7 @@ export default function Page() {
       setToast("Connect the Express API so I can understand your trip.");
       return;
     }
+    newTripStarted.current = true;
     try {
       const response = await fetch(`${apiBase}/api/trip/understand`, {
   method: "POST",
@@ -2171,6 +2189,9 @@ if (!parsed.destination) {
   );
   return;
 }
+      tripId.current = null;
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      localStorage.removeItem("travelmind-trip");
       const r = {
         destination: parsed.destination,
         travelers: parsed.travellers || 0,
@@ -2230,13 +2251,19 @@ if (!parsed.destination) {
         }),
         signal: AbortSignal.timeout(30000),
       });
-      if (!response.ok) throw new Error("Discovery unavailable");
-      const next = mapResults(await response.json());
+      const raw = await response.text();
+      let payload; try { payload = JSON.parse(raw); } catch { payload = null; }
+      if (!response.ok) throw new Error(payload?.message || raw.slice(0, 200) || `Discovery failed (${response.status})`);
+      const next = mapResults(payload);
+      if (!next.length) throw new Error("Google Places returned no usable recommendations.");
       setPlaces(next);
+      setDiscoveryFailed(false);
       setView("recommend");
-    } catch {
+    } catch (error) {
+      console.error("Recommendation discovery failed:", error);
+      setDiscoveryFailed(true);
       setView("understand");
-      setToast("We couldn't load fresh Google place results right now.");
+      setToast(error?.message || "We couldn't load fresh Google place results right now.");
     }
   };
   const doRecover = (e) => {
@@ -2388,6 +2415,7 @@ if (!parsed.destination) {
           back={() => setView("home")}
           next={discover}
           notify={setToast}
+          retry={discoveryFailed}
         />
       )}{" "}
       {view === "recommend" && (
