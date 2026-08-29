@@ -12,7 +12,7 @@ import directionRoutes from './routes/direction.routes.js';
 import chatRoutes from './routes/chat.routes.js';
 import destinationRoutes from './routes/destination.routes.js';
 export const app=express();
-const allowedOrigins=new Set([process.env.FRONTEND_URL,'http://localhost:3000','http://localhost:5173'].filter(Boolean));
+const allowedOrigins=new Set([process.env.FRONTEND_URL,'http://localhost:3000'].filter(Boolean));
 app.use(helmet(),cors({origin:(origin,callback)=>!origin||allowedOrigins.has(origin)?callback(null,true):callback(new Error('Origin not allowed by CORS'))}),express.json({limit:'100kb'}));
 app.get('/api/health',(_,res)=>res.json({ok:true,demoMode:process.env.DEMO_MODE!=='false'}));
 app.use('/api/trips',tripRoutes);app.use('/api/places',placeRoutes);
